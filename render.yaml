@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: streakforge-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ACCESS_TOKEN_MINUTES
+        value: 15
+      - key: JWT_REFRESH_TOKEN_DAYS
+        value: 14
+      - key: ALLOWED_ORIGINS
+        value: "https://*.github.io,https://*.onrender.com,https://*.vercel.app,http://localhost:5173"
+

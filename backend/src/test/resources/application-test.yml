@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:streakforge;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  flyway:
+    enabled: false
+
+app:
+  security:
+    jwt-secret: test-secret-at-least-long-enough-for-hmac-signing
+    access-token-minutes: 15
+    refresh-token-days: 14
