@@ -28,7 +28,7 @@ describe('StorageService', () => {
   it('saves and retrieves user profiles', () => {
     const testProfile: UserProfile = {
       id: 'profile-1',
-      name: 'Champion Skater',
+      name: 'Champion Athlete',
       createdAt: '2026-09-05T00:00:00.000Z',
       templates: [],
       schedule: {},
@@ -39,7 +39,7 @@ describe('StorageService', () => {
     const profiles = StorageService.getProfiles();
 
     assert.equal(profiles.length, 1);
-    assert.equal(profiles[0].name, 'Champion Skater');
+    assert.equal(profiles[0].name, 'Champion Athlete');
     assert.equal(profiles[0].id, 'profile-1');
   });
 

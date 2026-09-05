@@ -25,7 +25,7 @@ Enable athletes (and parents) to design, manage, and assign custom training and 
     *   **Monthly/Yearly:** High-level goals and macrocycles.
 
 ## Technical Considerations
-*   **Data Model Migration:** Update `SkaterProfile` and `DailyRecord` to handle template references and special day types.
+*   **Data Model Migration:** Update `UserProfile` and `DailyRecord` to handle template references and special day types.
 *   **Persistence:** Templates must be stored in `localStorage` per profile.
 *   **UI/UX:** A new "Plan Builder" or "Template Manager" screen.
 *   **Calendar Integration:** Visual indicators on the calendar for different day types and assigned templates.

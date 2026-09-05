@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * StreakForge / Parth Skating Planner Seed Script
+ * StreakForge Seed Script
  * 
  * Usage:
  *   node scripts/seed.js <email> <password>
  * 
  * Example:
- *   node scripts/seed.js parth@skate.com pass1234
+ *   node scripts/seed.js athlete@streakforge.com pass1234
  */
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080';

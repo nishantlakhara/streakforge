@@ -1,15 +1,19 @@
 import { DailyRecord, UserProfile } from '../types';
 
-const PROFILES_KEY = 'parth-skating-planner-profiles-v2';
-const ACTIVE_PROFILE_KEY = 'parth-skating-planner-active-id-v2';
+const PROFILES_KEY = 'streakforge-profiles-v1';
+const ACTIVE_PROFILE_KEY = 'streakforge-active-id-v1';
+const LEGACY_PROFILES_KEY = 'parth-skating-planner-profiles-v2';
 const LEGACY_DATA_KEY = 'parth-skating-planner-v1';
 
 export class StorageService {
   // Profiles Management
   static getProfiles(): UserProfile[] {
-    const data = localStorage.getItem(PROFILES_KEY);
+    let data = localStorage.getItem(PROFILES_KEY);
     if (!data) {
-        // If no profiles, check if legacy data exists to create "Parth"
+        data = localStorage.getItem(LEGACY_PROFILES_KEY);
+    }
+    if (!data) {
+        // If no profiles, check if legacy data exists to create initial profile
         const legacyData = localStorage.getItem(LEGACY_DATA_KEY);
         if (legacyData) {
             const parth: UserProfile = { 
@@ -21,8 +25,7 @@ export class StorageService {
                 library: { routines: [], mealPlans: [], drillSets: [] }
             };
             this.saveProfiles([parth]);
-            // Migrate legacy data to new key
-            localStorage.setItem(`skate-data-parth-legacy`, legacyData);
+            localStorage.setItem(`streakforge-data-parth-legacy`, legacyData);
             return [parth];
         }
         return [];
@@ -51,7 +54,7 @@ export class StorageService {
 
   // Data Management per Profile
   private static getStoredData(profileId: string): Record<string, DailyRecord> {
-    const data = localStorage.getItem(`skate-data-${profileId}`);
+    const data = localStorage.getItem(`streakforge-data-${profileId}`) || localStorage.getItem(`skate-data-${profileId}`);
     if (!data) return {};
     try {
       const records: Record<string, DailyRecord> = JSON.parse(data);
@@ -80,7 +83,7 @@ export class StorageService {
   static async saveRecord(profileId: string, record: DailyRecord): Promise<void> {
     const data = this.getStoredData(profileId);
     data[record.date] = record;
-    localStorage.setItem(`skate-data-${profileId}`, JSON.stringify(data));
+    localStorage.setItem(`streakforge-data-${profileId}`, JSON.stringify(data));
   }
 
   static async getAllRecords(profileId: string): Promise<Record<string, DailyRecord>> {
@@ -94,7 +97,7 @@ export class StorageService {
   static async importData(profileId: string, json: string): Promise<void> {
     try {
       const data = JSON.parse(json);
-      localStorage.setItem(`skate-data-${profileId}`, JSON.stringify(data));
+      localStorage.setItem(`streakforge-data-${profileId}`, JSON.stringify(data));
     } catch (e) {
       throw new Error('Invalid JSON format');
     }
