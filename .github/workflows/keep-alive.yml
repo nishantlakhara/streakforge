@@ -1,0 +1,22 @@
+name: Keep Render Backend Alive
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier idle spin-down (spins down after 15m)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend Health Endpoint
+        run: |
+          echo "Pinging StreakForge Render backend..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://streakforge-ezge.onrender.com/actuator/health)
+          echo "Response HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Backend is healthy and awake!"
+          else
+            echo "Backend returned status $HTTP_STATUS (it may be waking up)."
+          fi
