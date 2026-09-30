@@ -94,9 +94,12 @@ public class DatabaseConfig {
         config.setConnectionTimeout(20000);
         config.setInitializationFailTimeout(30000);
         
-        config.addDataSourceProperty("connectTimeout", "15");
-        config.addDataSourceProperty("socketTimeout", "30");
+        config.addDataSourceProperty("gssEncMode", "disable");
+        config.addDataSourceProperty("connectTimeout", "10");
+        config.addDataSourceProperty("loginTimeout", "15");
+        config.addDataSourceProperty("socketTimeout", "20");
         config.addDataSourceProperty("tcpKeepAlive", "true");
+        config.addDataSourceProperty("sslmode", "require");
 
         return new HikariDataSource(config);
     }

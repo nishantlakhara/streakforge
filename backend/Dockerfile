@@ -11,11 +11,11 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Minimal JRE Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Add non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Copy built jar from builder stage
@@ -25,7 +25,7 @@ COPY --from=builder /build/target/*.jar app.jar
 EXPOSE 8080
 
 # Configure JVM for 512MB RAM container environment
-ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Djava.net.preferIPv4Stack=true"
 
 # Start application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
