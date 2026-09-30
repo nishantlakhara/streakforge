@@ -36,19 +36,26 @@ public class DatabaseConfig {
         String user = username;
         String pass = password;
 
-        // If the URL is in standard postgres:// or postgresql:// format without jdbc: prefix
-        if (rawUrl.startsWith("postgres://") || (rawUrl.startsWith("postgresql://") && !rawUrl.startsWith("jdbc:"))) {
+        String cleanUrl = (rawUrl != null) ? rawUrl.trim() : "";
+        if (cleanUrl.startsWith("jdbc:")) {
+            cleanUrl = cleanUrl.substring(5);
+        }
+        if (cleanUrl.startsWith("postgres://")) {
+            cleanUrl = "postgresql://" + cleanUrl.substring("postgres://".length());
+        }
+
+        if (cleanUrl.contains("@")) {
             try {
-                URI uri = new URI(rawUrl.replace("postgres://", "http://").replace("postgresql://", "http://"));
+                URI uri = new URI(cleanUrl.replace("postgresql://", "http://"));
                 String host = uri.getHost();
                 int port = uri.getPort() == -1 ? 5432 : uri.getPort();
                 String path = uri.getPath();
                 String query = uri.getQuery();
                 
-                jdbcUrl = "jdbc:postgresql://" + host + ":" + port + path;
+                jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "/streakforge");
                 if (query != null && !query.isBlank()) {
                     jdbcUrl += "?" + query;
-                } else {
+                } else if (!jdbcUrl.contains("localhost")) {
                     jdbcUrl += "?sslmode=require";
                 }
 
@@ -59,18 +66,22 @@ public class DatabaseConfig {
                         pass = userInfo[1];
                     }
                 }
-                log.info("Sanitized database URL to JDBC format: host={}, port={}", host, port);
+                log.info("Parsed and sanitized database URI: host={}, port={}, user={}", host, port, user);
             } catch (Exception e) {
-                log.warn("Could not parse database URI, using raw URL with jdbc prefix: {}", e.getMessage());
-                jdbcUrl = "jdbc:" + rawUrl;
+                log.warn("Could not parse database URI ({}), falling back to direct format", e.getMessage());
+                jdbcUrl = rawUrl.startsWith("jdbc:") ? rawUrl : "jdbc:" + rawUrl;
+            }
+        } else {
+            if (!cleanUrl.startsWith("postgresql://") && !cleanUrl.startsWith("h2:")) {
+                cleanUrl = "postgresql://" + cleanUrl;
+            }
+            jdbcUrl = "jdbc:" + cleanUrl;
+            if (!jdbcUrl.contains("sslmode=") && !jdbcUrl.contains("localhost") && !jdbcUrl.contains("h2:")) {
+                jdbcUrl += (jdbcUrl.contains("?") ? "&" : "?") + "sslmode=require";
             }
         }
 
-        if (!jdbcUrl.startsWith("jdbc:")) {
-            jdbcUrl = "jdbc:" + jdbcUrl;
-        }
-
-        log.info("Configuring DataSource for JDBC URL: {}", jdbcUrl.replaceAll(":[^/@]+@", ":****@"));
+        log.info("Configuring DataSource for JDBC URL: {} with user: {}", jdbcUrl.replaceAll(":[^/@]+@", ":****@"), user);
 
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(user);
