@@ -29,3 +29,8 @@ target/
 *.njsproj
 *.sln
 *.sw?
+
+# Database backups and dumps (never commit sensitive database data)
+*.sql
+*_backup.*
+*_init.sql
