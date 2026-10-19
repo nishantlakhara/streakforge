@@ -32,15 +32,18 @@ jobs:
         run: |
           python scripts/dump_db.py streakforge_backup.sql
 
-      - name: Get Current Date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      - name: Get Current Timestamp
+        id: timestamp
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "tag=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: Publish Backup to Private Repository Release
         uses: softprops/action-gh-release@v2
         with:
           repository: nishantlakhara/streakforge-backups
           token: ${{ secrets.BACKUP_REPO_TOKEN }}
-          tag_name: backup-${{ steps.date.outputs.date }}
-          name: Database Backup ${{ steps.date.outputs.date }}
+          target_commitish: main
+          tag_name: v${{ steps.timestamp.tag }}
+          name: Database Backup - ${{ steps.timestamp.date }}
           files: streakforge_backup.sql
