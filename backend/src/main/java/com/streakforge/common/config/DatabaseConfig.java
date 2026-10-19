@@ -2,7 +2,6 @@ package com.streakforge.common.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.net.URI;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,56 +31,74 @@ public class DatabaseConfig {
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
         
-        String jdbcUrl = rawUrl;
-        String user = username;
-        String pass = password;
-
         String cleanUrl = (rawUrl != null) ? rawUrl.trim() : "";
         if (cleanUrl.startsWith("jdbc:")) {
             cleanUrl = cleanUrl.substring(5);
         }
         if (cleanUrl.startsWith("postgres://")) {
-            cleanUrl = "postgresql://" + cleanUrl.substring("postgres://".length());
+            cleanUrl = cleanUrl.substring("postgres://".length());
+        } else if (cleanUrl.startsWith("postgresql://")) {
+            cleanUrl = cleanUrl.substring("postgresql://".length());
         }
 
-        if (cleanUrl.contains("@")) {
+        String user = username;
+        String pass = password;
+        String host = "localhost";
+        int port = 5432;
+        String dbName = "streakforge";
+        String query = "";
+
+        // Extract query parameters if present
+        int qIdx = cleanUrl.indexOf('?');
+        if (qIdx != -1) {
+            query = cleanUrl.substring(qIdx + 1);
+            cleanUrl = cleanUrl.substring(0, qIdx);
+        }
+
+        // Extract user:password if present before '@'
+        int atIdx = cleanUrl.lastIndexOf('@');
+        if (atIdx != -1) {
+            String userInfo = cleanUrl.substring(0, atIdx);
+            cleanUrl = cleanUrl.substring(atIdx + 1);
+            int colonIdx = userInfo.indexOf(':');
+            if (colonIdx != -1) {
+                user = userInfo.substring(0, colonIdx);
+                pass = userInfo.substring(colonIdx + 1);
+            } else {
+                user = userInfo;
+            }
+        }
+
+        // Extract database name if present after '/'
+        int slashIdx = cleanUrl.indexOf('/');
+        if (slashIdx != -1) {
+            dbName = cleanUrl.substring(slashIdx + 1);
+            cleanUrl = cleanUrl.substring(0, slashIdx);
+        }
+
+        // Extract host and port
+        int colonIdx = cleanUrl.indexOf(':');
+        if (colonIdx != -1) {
+            host = cleanUrl.substring(0, colonIdx);
             try {
-                URI uri = new URI(cleanUrl.replace("postgresql://", "http://"));
-                String host = uri.getHost();
-                int port = uri.getPort() == -1 ? 5432 : uri.getPort();
-                String path = uri.getPath();
-                String query = uri.getQuery();
-                
-                jdbcUrl = "jdbc:postgresql://" + host + ":" + port + (path != null ? path : "/streakforge");
-                if (query != null && !query.isBlank()) {
-                    jdbcUrl += "?" + query;
-                } else if (!jdbcUrl.contains("localhost")) {
-                    jdbcUrl += "?sslmode=require";
-                }
-
-                if (uri.getUserInfo() != null) {
-                    String[] userInfo = uri.getUserInfo().split(":", 2);
-                    user = userInfo[0];
-                    if (userInfo.length > 1) {
-                        pass = userInfo[1];
-                    }
-                }
-                log.info("Parsed and sanitized database URI: host={}, port={}, user={}", host, port, user);
-            } catch (Exception e) {
-                log.warn("Could not parse database URI ({}), falling back to direct format", e.getMessage());
-                jdbcUrl = rawUrl.startsWith("jdbc:") ? rawUrl : "jdbc:" + rawUrl;
-            }
-        } else {
-            if (!cleanUrl.startsWith("postgresql://") && !cleanUrl.startsWith("h2:")) {
-                cleanUrl = "postgresql://" + cleanUrl;
-            }
-            jdbcUrl = "jdbc:" + cleanUrl;
-            if (!jdbcUrl.contains("sslmode=") && !jdbcUrl.contains("localhost") && !jdbcUrl.contains("h2:")) {
-                jdbcUrl += (jdbcUrl.contains("?") ? "&" : "?") + "sslmode=require";
-            }
+                port = Integer.parseInt(cleanUrl.substring(colonIdx + 1));
+            } catch (NumberFormatException ignored) {}
+        } else if (!cleanUrl.isBlank()) {
+            host = cleanUrl;
         }
 
-        log.info("Configuring DataSource for JDBC URL: {} with user: {}", jdbcUrl.replaceAll(":[^/@]+@", ":****@"), user);
+        if (host == null || host.isBlank() || "null".equalsIgnoreCase(host)) {
+            host = "localhost";
+        }
+
+        String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + (dbName.isBlank() ? "streakforge" : dbName);
+        if (!query.isBlank()) {
+            jdbcUrl += "?" + query;
+        } else if (!host.contains("localhost")) {
+            jdbcUrl += "?sslmode=require";
+        }
+
+        log.info("Configuring DataSource: host={}, port={}, db={}, user={}", host, port, dbName, user);
 
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(user);
