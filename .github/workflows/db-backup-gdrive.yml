@@ -18,15 +18,6 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client
 
-      - name: Dump PostgreSQL Database
-        env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          echo "Dumping database from Supabase..."
-          pg_dump "$DATABASE_URL" > streakforge_backup.sql
-          FILE_SIZE=$(wc -c < streakforge_backup.sql)
-          echo "Dump completed ($FILE_SIZE bytes)."
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -35,6 +26,12 @@ jobs:
       - name: Install Google Drive Dependencies
         run: |
           pip install --quiet google-api-python-client google-auth-httplib2 google-auth-oauthlib
+
+      - name: Dump PostgreSQL Database
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          python scripts/dump_db.py streakforge_backup.sql
 
       - name: Upload Backup to Google Drive
         env:
