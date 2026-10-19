@@ -44,6 +44,6 @@ jobs:
           repository: nishantlakhara/streakforge-backups
           token: ${{ secrets.BACKUP_REPO_TOKEN }}
           target_commitish: main
-          tag_name: v${{ steps.timestamp.tag }}
-          name: Database Backup - ${{ steps.timestamp.date }}
+          tag_name: backup-${{ steps.timestamp.outputs.tag }}
+          name: Database Backup - ${{ steps.timestamp.outputs.date }}
           files: streakforge_backup.sql
